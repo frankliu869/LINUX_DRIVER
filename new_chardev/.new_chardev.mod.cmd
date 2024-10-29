@@ -1,0 +1,1 @@
+savedcmd_/home/oran-5g/rpi/rpi_driver/new_chardev/new_chardev.mod := printf '%s\n'   new_chardev.o | awk '!x[$$0]++ { print("/home/oran-5g/rpi/rpi_driver/new_chardev/"$$0) }' > /home/oran-5g/rpi/rpi_driver/new_chardev/new_chardev.mod
