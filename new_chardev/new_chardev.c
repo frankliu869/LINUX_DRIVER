@@ -73,9 +73,11 @@ static int __init templateCharDev_init(void) {
 
 
 static void __exit templateCharDev_exit(void) {
-    
+    cdev_del(&testDevice.testCdev);
+    device_destroy(testDevice.class, testDevice.devId);
+    class_destroy(testDevice.class);    
 
-    printk(KERN_INFO "mychardev: Device unregistered\n");
+    printk(KERN_INFO "testCharDev: Device unregistered\n");
 }
 
 module_init(templateCharDev_init);
