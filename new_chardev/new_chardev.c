@@ -1,6 +1,13 @@
+#include <linux/types.h>
+#include <linux/kernel.h>
+#include <linux/delay.h>
+#include <linux/init.h>
 #include <linux/module.h>
-#include <linux/fs.h>
+#include <linux/errno.h>
+#include <linux/gpio.h>
 #include <linux/cdev.h>
+#include <linux/device.h>
+#include <linux/fs.h>
 #include <linux/uaccess.h>
 
 #define DEVICE_NAME "testCharDev"
@@ -18,28 +25,38 @@ typedef struct newCharDevice {
 
 static struct newCharDevice testDevice;
 
-static struct file_operations fops = {
-    .owner = THIS_MODULE,
-    .open = my_open,
-    .release = my_release,
-    .read = my_read,
-    .write = my_write,
-};
-
 static ssize_t templateCharDev_write(struct file *file, const char __user *buffer, size_t len, loff_t *offset) {
-     
+     return 0;
 }
 
 static ssize_t templateCharDev_read(struct file *file, char __user *buffer, size_t len, loff_t *offset) {
-    
+    return 0;
 }
+
+static int templateCharDev_open(struct inode *inode, struct file *file) {
+    printk(KERN_INFO "testCharDev: Device opened\n");
+    return 0;
+}
+
+static int templateCharDev_release(struct inode *inode, struct file *file) {
+    printk(KERN_INFO "testCharDev: Device closed\n");
+    return 0;
+}
+
+static struct file_operations fops = {
+    .owner = THIS_MODULE,
+    .open = templateCharDev_open,
+    .release = templateCharDev_release,
+    .read = templateCharDev_read,
+    .write = templateCharDev_write,
+};
 
 static int __init templateCharDev_init(void) {
 
     int errorCode = 0;
 
     if(testDevice.minor){
-        testDevice.devNum = MKDEV(newchrled.major, 0);
+        testDevice.devId = MKDEV(testDevice.major, 0);
         register_chrdev_region(testDevice.devId, NUM_DEVICES, DEVICE_NAME);
     }else{
         alloc_chrdev_region(&testDevice.devId, 0, NUM_DEVICES, DEVICE_NAME);
@@ -55,7 +72,7 @@ static int __init templateCharDev_init(void) {
         return errorCode;
     }
 
-    testDevice.class = class_create(THIS_MODULE, DEVICE_NAME);
+    testDevice.class = class_create(DEVICE_NAME);
     if(IS_ERR(testDevice.class)){
         printk(KERN_ERR "testCharDev: Failed to create class\n");
         return PTR_ERR(testDevice.class);
