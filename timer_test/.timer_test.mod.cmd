@@ -1,0 +1,1 @@
+savedcmd_/home/oran-5g/rpi/rpi_driver/timer_test/timer_test.mod := printf '%s\n'   timer_test.o | awk '!x[$$0]++ { print("/home/oran-5g/rpi/rpi_driver/timer_test/"$$0) }' > /home/oran-5g/rpi/rpi_driver/timer_test/timer_test.mod

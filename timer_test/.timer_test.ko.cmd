@@ -1,0 +1,1 @@
+savedcmd_/home/oran-5g/rpi/rpi_driver/timer_test/timer_test.ko := arm-linux-gnueabihf-ld -r  -EL -z noexecstack   --build-id=sha1  -T scripts/module.lds -o /home/oran-5g/rpi/rpi_driver/timer_test/timer_test.ko /home/oran-5g/rpi/rpi_driver/timer_test/timer_test.o /home/oran-5g/rpi/rpi_driver/timer_test/timer_test.mod.o;  true
