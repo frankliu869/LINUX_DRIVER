@@ -1,1 +1,0 @@
-savedcmd_/home/oran-5g/rpi/rpi_driver/new_chardev/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/oran-5g/rpi/rpi_driver/new_chardev/Module.symvers -T /home/oran-5g/rpi/rpi_driver/new_chardev/modules.order -i Module.symvers -e 

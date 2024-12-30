@@ -13,7 +13,16 @@
 #include <linux/jiffies.h>
 #include <linux/ioctl.h>
 #include <linux/mutex.h>
+#include <linux/of.h>
 
+#define LED_NAME  "LED"
+#define LED_PIN   (int)518
+
+#define LED_MAGIC 'k'
+#define LED_INIT  _IO(LED_MAGIC, 0)
+#define LED_NO    _IOW(LED_MAGIC, 1, int)
+#define LED_OFF   _IOW(LED_MAGIC, 2, int)
+#define LED_BLINK _IOW(LED_MAGIC, 3, int) 
 
 #define DEVICE_NAME "testCharDev"
 #define NUM_DEVICES 1
@@ -26,6 +35,8 @@ typedef struct timerDevice {
     struct class *class;
     struct device *device;
     int data;
+    int gpioPinId;
+    struct device_node *ledNode;
     int lockStatus;
     struct mutex ledLock;
     struct timer_list timer;
@@ -42,6 +53,52 @@ static ssize_t templateCharDev_read(struct file *file, char __user *buffer, size
     return 0;
 }
 
+long led_ioctl(struct file *file, unsigned int cmd, unsigned long arg){
+    int temp;
+
+    mutex_lock(&testDevice.ledLock);
+
+    switch (cmd)
+    {
+    case LED_INIT:
+        printk(KERN_INFO "LED_INIT\n");
+        // gpio_request(17, "LED");
+        // gpio_direction_output(17, 1);
+        break;
+
+    case LED_NO:
+        printk(KERN_INFO "LED_NO\n");
+
+        copy_from_user(&temp, (int *)arg, sizeof(int));
+        printk(KERN_INFO "arg = %ld\n", temp);
+        // gpio_set_value(17, 0);
+        break;
+
+    case LED_OFF:
+        printk(KERN_INFO "LED_OFF\n");
+
+        copy_from_user(&temp, (int *)arg, sizeof(int));
+        printk(KERN_INFO "arg = %ld\n", temp);
+        // gpio_set_value(17, 1);
+        break;
+
+    case LED_BLINK:
+        printk(KERN_INFO "LED_BLINK\n");
+        copy_from_user(&temp, (int *)arg, sizeof(int));
+        printk(KERN_INFO "arg = %ld\n", temp);
+
+        mod_timer(&testDevice.timer, jiffies + msecs_to_jiffies(500));
+        break;
+    default:
+        mutex_unlock(&testDevice.ledLock);
+        return -EINVAL;
+    }
+
+    mutex_unlock(&testDevice.ledLock);
+
+    return 0;
+}
+
 static int templateCharDev_open(struct inode *inode, struct file *file) {
     printk(KERN_INFO "testCharDev: Device opened\n");
     file->private_data = &testDevice;
@@ -54,10 +111,14 @@ static int templateCharDev_release(struct inode *inode, struct file *file) {
     return 0;
 }
 
-void timerCallback(struct timer_list *timer){
-    printk(KERN_INFO "Timer expired and Restart !\n");
+static void timerCallback(struct timer_list *timer){
+    static int ledStatus = 0x01;
+
+    ledStatus = ledStatus ^ 0x01;
+
+    printk(KERN_INFO "LED Blink ! %d\n", ledStatus);
+    gpio_set_value(LED_PIN, ledStatus);
     mod_timer(&testDevice.timer, jiffies + msecs_to_jiffies(1000));
-    // gpio_set_value(17, 1);
 }
 
 
@@ -68,6 +129,7 @@ static struct file_operations fops = {
     .release = templateCharDev_release,
     .read = templateCharDev_read,
     .write = templateCharDev_write,
+    .unlocked_ioctl = led_ioctl,
 };
 
 static int __init templateCharDev_init(void) {
@@ -106,16 +168,42 @@ static int __init templateCharDev_init(void) {
         return PTR_ERR(testDevice.device);
     }
 
+    int err = 0;
+    err = gpio_request(LED_PIN, LED_NAME);
+    if(err){
+        printk(KERN_ERR "testCharDev: Failed to request GPIO\n");
+        printk(KERN_ERR "testCharDev: Error code: %d\n", err);
+        return -1;
+    }
+
+
+    if(gpio_direction_output(LED_PIN, 1)){
+        printk(KERN_ERR "testCharDev: Failed to set direction\n");
+        return -1;
+    }
+
     timer_setup(&testDevice.timer, timerCallback, 0);
     mod_timer(&testDevice.timer, jiffies + msecs_to_jiffies(1000));
     
     printk(KERN_INFO "testCharDev: Device registered\n");
     return 0;
+
+    GPIO_ERR:
+        gpio_free(LED_PIN);
+    DEV_ERR:
+        device_destroy(testDevice.class, testDevice.devId);
+    CLASS_ERR:
+        class_destroy(testDevice.class);
+    CDEV_ERR:
+        cdev_del(&testDevice.testCdev);
+
+    return -1;
 }
 
 
 static void __exit templateCharDev_exit(void) {
     del_timer(&testDevice.timer);
+    gpio_free(LED_PIN);
 
     device_destroy(testDevice.class, testDevice.devId);
     class_destroy(testDevice.class);    

@@ -1,1 +1,0 @@
-savedcmd_/home/oran-5g/rpi/rpi_driver/new_chardev/new_chardev.ko := arm-linux-gnueabihf-ld -r  -EL -z noexecstack   --build-id=sha1  -T scripts/module.lds -o /home/oran-5g/rpi/rpi_driver/new_chardev/new_chardev.ko /home/oran-5g/rpi/rpi_driver/new_chardev/new_chardev.o /home/oran-5g/rpi/rpi_driver/new_chardev/new_chardev.mod.o;  true

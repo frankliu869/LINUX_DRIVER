@@ -1,1 +1,0 @@
-savedcmd_/home/oran-5g/rpi/rpi_driver/hello_world/hello_world.ko := arm-linux-gnueabihf-ld -r  -EL -z noexecstack   --build-id=sha1  -T scripts/module.lds -o /home/oran-5g/rpi/rpi_driver/hello_world/hello_world.ko /home/oran-5g/rpi/rpi_driver/hello_world/hello_world.o /home/oran-5g/rpi/rpi_driver/hello_world/hello_world.mod.o;  true
